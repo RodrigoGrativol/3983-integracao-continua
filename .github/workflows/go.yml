@@ -10,9 +10,9 @@ on:
     branches: [ "main" ]
 
 jobs:
+
   ci:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
 
@@ -24,14 +24,6 @@ jobs:
     - name: Inicia banco
       run: docker compose up -d postgres
 
-    - name: Espera Postgres subir
-      run: |
-        for i in {1..10}; do
-          nc -z localhost 5432 && echo "Postgres pronto!" && break
-          echo "Aguardando Postgres subir..."
-          sleep 2
-        done
-
     - name: Lint
       uses: golangci/golangci-lint-action@v6
       with:
@@ -39,20 +31,4 @@ jobs:
         args: controllers/ database/ models/ routes/
 
     - name: Test
-      run: |
-        DB_HOST=127.0.0.1 \
-        DB_USER=root \
-        DB_PASSWORD=root \
-        DB_NAME=root \
-        DB_PORT=5432 \
-        go test -v ./...
-
-    - name: Build
-      run: go build main.go
-
-    - name: Projeto compilado
-      uses: actions/upload-artifact@v4
-      with:
-        name: projeto_compilado
-        path: main
-
+      run: DB_HOST=${{ secrets.DB_HOST }} DB_PASSWORD=${{ secrets.DB_PASSWORD }} DB_USER=${{ secrets.DB_USER }} DB_NAME=${{ secrets.DB_NAME }} DB_PORT=${{ secrets.DB_PORT }} go test -v main_test.go
